@@ -22,40 +22,40 @@ import java.util.ListIterator;
 public class CoolWeatherOpenHelper extends SQLiteOpenHelper {
 
     private static CoolWeatherOpenHelper coolWeatherOpenHelper = null;
-    private SQLiteDatabase db = null;
 
     public static final String CoolWeatherDBName = "CoolWeather";
     public static final Integer version = 1;
 
+    private static SQLiteDatabase db = null;
+
     private String Create_Province = "CREATE TABLE Province(" +
-            "id Integer Primary Key autoincrement" +
-            "provinceName TEXT" +
+            "id Integer Primary Key autoincrement," +
+            "provinceName TEXT," +
             "provinceCode TEXT" +
             ")";
     private String Create_City = "CREATE TABLE City(" +
-            "id Integer Primary Key AUTOINCREMENT" +
-            "cityName TEXT" +
-            "cityCode TEXT" +
+            "id Integer Primary Key AUTOINCREMENT," +
+            "cityName TEXT," +
+            "cityCode TEXT," +
             "provinceId Integer" +
             ")";
-    private String Create_County = "CREATE TABLE COUNTY(" +
-            "id Integer Primary Key AUTOINCREMENT" +
-            "countyName TEXT" +
-            "countyCode TEXT" +
+    private String Create_County = "CREATE TABLE County(" +
+            "id Integer Primary Key AUTOINCREMENT," +
+            "countyName TEXT," +
+            "countyCode TEXT," +
             "cityId Integer" +
             ")";
 
-    public synchronized static CoolWeatherOpenHelper GetInstance()
-    {
-        if(coolWeatherOpenHelper == null) {
+    public synchronized static CoolWeatherOpenHelper GetInstance() {
+        if (coolWeatherOpenHelper == null) {
             coolWeatherOpenHelper = new CoolWeatherOpenHelper(MyApplication.GetGlobeContent(), CoolWeatherDBName, null, version);
+            db = coolWeatherOpenHelper.getWritableDatabase();
         }
         return coolWeatherOpenHelper;
     }
 
     private CoolWeatherOpenHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
         super(context, name, factory, version);
-        db = coolWeatherOpenHelper.getWritableDatabase();
     }
 
     @Override
@@ -68,8 +68,7 @@ public class CoolWeatherOpenHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 
-        switch (oldVersion)
-        {
+        switch (oldVersion) {
             case 1:
                 break;
         }
@@ -78,7 +77,7 @@ public class CoolWeatherOpenHelper extends SQLiteOpenHelper {
     public List<Province> LoadProvince() {
 
         List<Province> provinceList = new ArrayList<Province>();
-        Cursor cursor = db.query("Province", null, null, null,null, null,null);
+        Cursor cursor = db.query("Province", null, null, null, null, null, null);
         if (cursor.moveToFirst()) {
             do {
                 Province province = new Province();
@@ -86,27 +85,27 @@ public class CoolWeatherOpenHelper extends SQLiteOpenHelper {
                 province.setProvinceName(cursor.getString(cursor.getColumnIndex("provinceName")));
                 province.setProvinceCode(cursor.getString(cursor.getColumnIndex("provinceCode")));
                 provinceList.add(province);
-            }while (cursor.moveToNext());
+            } while (cursor.moveToNext());
         }
 
         return provinceList;
     }
 
-    public void SaveProvince(Province province) {
+    public void SaveProvince(final Province province) {
 
         if (province != null) {
             ContentValues values = new ContentValues();
             values.put("provinceName", province.getProvinceName());
             values.put("provinceCode", province.getProvinceCode());
 
-            db.insert("Province",null,values);
+            db.insert("Province", null, values);
         }
     }
 
-    public List<City> LoadCity() {
+    public List<City> LoadCity(String provinceId) {
 
         List<City> cityList = new ArrayList<City>();
-        Cursor cursor = db.query("City", null, null, null,null, null,null);
+        Cursor cursor = db.query("City", null, "provinceId=? ", new String[]{provinceId}, null, null, null);
         if (cursor.moveToFirst()) {
             do {
                 City city = new City();
@@ -115,7 +114,7 @@ public class CoolWeatherOpenHelper extends SQLiteOpenHelper {
                 city.setCityCode(cursor.getString(cursor.getColumnIndex("cityCode")));
                 city.setProvinceId(cursor.getInt(cursor.getColumnIndex("provinceId")));
                 cityList.add(city);
-            }while (cursor.moveToNext());
+            } while (cursor.moveToNext());
         }
 
         return cityList;
@@ -129,14 +128,14 @@ public class CoolWeatherOpenHelper extends SQLiteOpenHelper {
             values.put("cityCode", city.getCityCode());
             values.put("provinceId", city.getProvinceId());
 
-            db.insert("City",null,values);
+            db.insert("City", null, values);
         }
     }
 
-    public List<County> LoadCounty() {
+    public List<County> LoadCounty(String cityId) {
 
         List<County> countyList = new ArrayList<County>();
-        Cursor cursor = db.query("County", null, null, null,null, null,null);
+        Cursor cursor = db.query("County", null, "cityId=?", new String[]{cityId}, null, null, null);
         if (cursor.moveToFirst()) {
             do {
                 County county = new County();
@@ -145,7 +144,7 @@ public class CoolWeatherOpenHelper extends SQLiteOpenHelper {
                 county.setCountyCode(cursor.getString(cursor.getColumnIndex("countyCode")));
                 county.setCityId(cursor.getInt(cursor.getColumnIndex("cityId")));
                 countyList.add(county);
-            }while (cursor.moveToNext());
+            } while (cursor.moveToNext());
         }
 
         return countyList;
@@ -159,7 +158,7 @@ public class CoolWeatherOpenHelper extends SQLiteOpenHelper {
             values.put("countyCode", county.getCountyCode());
             values.put("cityId", county.getCityId());
 
-            db.insert("County",null,values);
+            db.insert("County", null, values);
         }
     }
 }
