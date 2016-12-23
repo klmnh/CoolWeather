@@ -1,6 +1,7 @@
 package com.adt.lenovo.coolweather.activity;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -71,6 +72,13 @@ public class ChooseAreaActivity extends AppCompatActivity {
                     case levelCity:
                         selectedCity = cityList.get(position);
                         QueryCounty();
+                        break;
+                    case levelCounty:
+                        selectedCounty = countyList.get(position);
+                        Intent intent = new Intent(ChooseAreaActivity.this,WeatherActivity.class);
+                        intent.putExtra("county_url",selectedCounty.getCountyCode());
+                        startActivity(intent);
+                        finish();
                         break;
                 }
             }

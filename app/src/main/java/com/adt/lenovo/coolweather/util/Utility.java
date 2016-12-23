@@ -1,5 +1,8 @@
 package com.adt.lenovo.coolweather.util;
 
+import android.content.SharedPreferences;
+import android.os.SystemClock;
+import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -9,6 +12,8 @@ import com.adt.lenovo.coolweather.db.County;
 import com.adt.lenovo.coolweather.db.Province;
 import com.adt.lenovo.coolweather.model.CityInfo;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -18,8 +23,11 @@ import org.xml.sax.helpers.DefaultHandler;
 import java.io.IOException;
 import java.io.StringReader;
 import java.text.AttributedCharacterIterator;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -90,7 +98,7 @@ public class Utility {
 
                 for (CityInfo cityInfo : list) {
                     County county = new County();
-                    county.setCountyCode(cityInfo.getPyName());
+                    county.setCountyCode(cityInfo.getUrl());
                     county.setCountyName(cityInfo.getCityName());
                     county.setCityId(cityId);
                     coolWeatherOpenHelper.SaveCounty(county);
@@ -101,7 +109,7 @@ public class Utility {
         return false;
     }
 
-    public static List<CityInfo> ParseXMlString(String strXML) throws IOException {
+    private static List<CityInfo> ParseXMlString(String strXML) throws IOException {
         final List<CityInfo> cityInfolist = new ArrayList<CityInfo>();
 
         SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
@@ -194,6 +202,37 @@ public class Utility {
         }
 
         return cityInfolist;
+    }
+
+    public synchronized static void HandleWeatherResponse(String strResponse) {
+
+        JSONObject jsonObject = null;
+        try {
+            jsonObject = new JSONObject(strResponse);
+            JSONObject weatherInfo = jsonObject.getJSONObject("weatherinfo");
+            String cityName = weatherInfo.getString("city");
+            String cityId = weatherInfo.getString("cityid");
+            String temp1 = weatherInfo.getString("temp1");
+            String temp2 = weatherInfo.getString("temp2");
+            String weather = weatherInfo.getString("weather");
+            String pTime = weatherInfo.getString("ptime");
+
+            SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(MyApplication.GetGlobeContent()).edit();
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss", Locale.CHINA);
+            editor.putBoolean("city_selected",true);
+            editor.putString("city_name",cityName);
+            editor.putString("cityid",cityId);
+            editor.putString("temp1",temp1);
+            editor.putString("temp2",temp2);
+            editor.putString("weather",weather);
+            editor.putString("ptime",pTime);
+            editor.putString("currtime",dateFormat.format(new Date()));
+            editor.commit();
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
     }
 
 }
